@@ -9,7 +9,7 @@ regex = re.compile('[%s]' % re.escape(string.punctuation))
 cachedStopWords = stopwords.words('english')
 
 class Jaccard():
-	def __init__(self, tweets, pos_words, neg_words):
+	def __init__(self, tweets, pos_words, neg_words, home_team_words, away_team_words):
 		self.tweets = tweets
 		self.pos_words = pos_words
 		self.neg_words = neg_words
@@ -96,18 +96,24 @@ class Jaccard():
 			if self.jaccardMatrix[tweet][0] > self.jaccardMatrix[tweet][1]:
 				print self.tweets[tweet]['text'].encode('utf-8'), " is negative"
 				if self.tweetTeams == "home":
-					home_score++
+					self.home_score = self.home_score + 1
 				elif self.tweetTeams == "away":
-					away_score++
+					self.away_score = self.away_score + 1
 			elif self.jaccardMatrix[tweet][0] < self.jaccardMatrix[tweet][1]:
 				print self.tweets[tweet]['text'].encode('utf-8'), " is positive"
 				if self.tweetTeams == "home":
-					home_score--
+					self.home_score = self.home_score - 1
 				elif self.tweetTeams == "away":
-					away_score--
+					self.away_score = self.away_score - 1
+
+	def decideWinner(self):
+		if self.home_score >= self.away_score:
+			print "HOME TEAM WON"
+		elif self.away_score > self.home_score:
+			print "AWAY TEAM WON"
 
 if __name__ == '__main__':
-	if len(sys.argv) != 4:
+	if len(sys.argv) != 6:
 		print 'Incorrect number of arguments'
 		exit(-1)
 	
@@ -135,7 +141,21 @@ if __name__ == '__main__':
 			neg_words[i]=line.rstrip('\n')
 			i=i+1	
 
-	jaccard = Jaccard(tweets, pos_words, neg_words)
+	home_words = {}
+	i=0
+	with open(sys.argv[4], 'r') as file:
+		for line in file:
+			home_words[i]=line.rstrip('\n')
+			i=i+1	
+	
+	away_words = {}
+	i=0
+	with open(sys.argv[5], 'r') as file:
+		for line in file:
+			away_words[i]=line.rstrip('\n')
+			i=i+1	
+
+	jaccard = Jaccard(tweets, pos_words, neg_words, home_words, away_words)
 	jaccard.printMatrix()
 	jaccard.decideSentiment()
-
+	jaccard.decideWinner()
