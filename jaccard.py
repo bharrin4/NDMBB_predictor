@@ -69,6 +69,7 @@ class Jaccard():
 			
 			#grab set of words from first tweet
 			words1 = set(self.wordSet(self.tweets[tweet1]['text']))
+			print "words from tweet: ", words1
 
 			#grab second set of words from second tweet
 			words2 = set(self.home_team_words.values())
@@ -76,11 +77,15 @@ class Jaccard():
 
 			#calculate Jaccard distance b/t two sets of words & update Jaccard 2D matrix
 			distanceHome = self.jaccardDist(words1, words2)
+			print "distanceHome= ", distanceHome
 			distanceAway = self.jaccardDist(words1, words3)
-			if distanceHome >= distanceAway:
+			print "distanceAway= ", distanceAway
+			if distanceHome < distanceAway:
 				self.tweetTeams[tweet1] = "home"
-			elif distanceHome < distanceAway:
-				self.twetTeams[tweet1] = "away"
+				print "new home tweet"
+			elif distanceHome > distanceAway:
+				self.tweetTeams[tweet1] = "away"
+				print "new away tweet"
 			
 	
 
@@ -94,19 +99,26 @@ class Jaccard():
 		#depending which distance is shorter, decide if tweet is positive or negative
 		for tweet in self.tweets:
 			if self.jaccardMatrix[tweet][0] > self.jaccardMatrix[tweet][1]:
-				print self.tweets[tweet]['text'].encode('utf-8'), " is negative"
-				if self.tweetTeams == "home":
-					self.home_score = self.home_score + 1
-				elif self.tweetTeams == "away":
-					self.away_score = self.away_score + 1
-			elif self.jaccardMatrix[tweet][0] < self.jaccardMatrix[tweet][1]:
-				print self.tweets[tweet]['text'].encode('utf-8'), " is positive"
-				if self.tweetTeams == "home":
+				#print self.tweets[tweet]['text'].encode('ascii', 'ignore'), " is negative"
+				if self.tweetTeams[tweet] == "home":
 					self.home_score = self.home_score - 1
-				elif self.tweetTeams == "away":
+					print "home score: ", self.home_score
+				elif self.tweetTeams[tweet] == "away":
 					self.away_score = self.away_score - 1
+					print "away score: ", self.away_score
+			elif self.jaccardMatrix[tweet][0] < self.jaccardMatrix[tweet][1]:
+				#print self.tweets[tweet]['text'].encode('ascii', 'ignore'), " is positive"
+				if self.tweetTeams[tweet] == "home":
+					self.home_score = self.home_score + 1
+					print "home score: ", self.home_score
+				elif self.tweetTeams[tweet] == "away":
+					self.away_score = self.away_score + 1
+					print "away score: ", self.away_score
 
 	def decideWinner(self):
+		print "Home Score: ", self.home_score
+		print "Away Score: ", self.away_score
+
 		if self.home_score >= self.away_score:
 			print "HOME TEAM WON"
 		elif self.away_score > self.home_score:
@@ -156,6 +168,7 @@ if __name__ == '__main__':
 			i=i+1	
 
 	jaccard = Jaccard(tweets, pos_words, neg_words, home_words, away_words)
-	jaccard.printMatrix()
+	jaccard.initializeTeams()
+	#jaccard.printMatrix()
 	jaccard.decideSentiment()
 	jaccard.decideWinner()
