@@ -17,6 +17,13 @@ class Jaccard():
 		self.away_team_words = away_team_words
 		self.jaccardMatrix = {} 
 		self.tweetTeams = {}
+		self.total_neg_home =0
+		self.total_neg_away = 0
+		self.total_pos_away = 0
+		self.total_pos_home = 0
+		self.total_home = 0
+		self.total_away = 0
+		self.t = 0
 		self.home_score = 0
 		self.away_score = 0
 
@@ -103,22 +110,36 @@ class Jaccard():
 				if self.tweetTeams[tweet] == "home":
 					self.home_score = self.home_score - 1
 					print "home score: ", self.home_score
+					self.total_neg_home += 1
+				
 				elif self.tweetTeams[tweet] == "away":
 					self.away_score = self.away_score - 1
 					print "away score: ", self.away_score
+					self.total_neg_away +=1
+
 			elif self.jaccardMatrix[tweet][0] < self.jaccardMatrix[tweet][1]:
 				#print self.tweets[tweet]['text'].encode('ascii', 'ignore'), " is positive"
 				if self.tweetTeams[tweet] == "home":
 					self.home_score = self.home_score + 1
 					print "home score: ", self.home_score
+					self.total_pos_home += 1
 				elif self.tweetTeams[tweet] == "away":
 					self.away_score = self.away_score + 1
 					print "away score: ", self.away_score
+					self.total_pos_away += 1
 
 	def decideWinner(self):
+		
+		self.total_home = (self.total_pos_home * 100)/(self.total_pos_home + self.total_neg_home)
+		self.total_away = (self.total_pos_away * 100)/(self.total_pos_away + self.total_neg_away)
+
+
 		print "Home Score: ", self.home_score
 		print "Away Score: ", self.away_score
-
+		
+		print "Home Positive Percentage", self.total_home
+		print "Away Positive Percentage", self.total_away
+		
 		if self.home_score >= self.away_score:
 			print "HOME TEAM WON"
 		elif self.away_score > self.home_score:
