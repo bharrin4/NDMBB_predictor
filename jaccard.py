@@ -3,11 +3,21 @@ import json
 import re, string
 import copy
 from nltk.corpus import stopwords
+<<<<<<< HEAD
+=======
+import matplotlib.pyplot as plt
+import matplotlib.cm as cm
+
+>>>>>>> 90b164745f1408bfd301efc5ab6b088a36bba45d
 
 #method to strip punctuation from incoming strings and return list of lowercase stop words ('the', 'is', 'at', etc)
 regex = re.compile('[%s]' % re.escape(string.punctuation))
 cachedStopWords = stopwords.words('english')
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> 90b164745f1408bfd301efc5ab6b088a36bba45d
 class Jaccard():
 	def __init__(self, tweets, pos_words, neg_words, home_team_words, away_team_words):
 		self.tweets = tweets
@@ -23,7 +33,11 @@ class Jaccard():
 		self.total_pos_home = 0
 		self.total_home = 0
 		self.total_away = 0
+<<<<<<< HEAD
 		self.t = 0
+=======
+		self.graph = 0
+>>>>>>> 90b164745f1408bfd301efc5ab6b088a36bba45d
 		self.home_score = 0
 		self.away_score = 0
 
@@ -104,6 +118,11 @@ class Jaccard():
 
 	def decideSentiment(self):
 		#depending which distance is shorter, decide if tweet is positive or negative
+<<<<<<< HEAD
+=======
+		i = 0
+
+>>>>>>> 90b164745f1408bfd301efc5ab6b088a36bba45d
 		for tweet in self.tweets:
 			if self.jaccardMatrix[tweet][0] > self.jaccardMatrix[tweet][1]:
 				#print self.tweets[tweet]['text'].encode('ascii', 'ignore'), " is negative"
@@ -111,23 +130,71 @@ class Jaccard():
 					self.home_score = self.home_score - 1
 					print "home score: ", self.home_score
 					self.total_neg_home += 1
+<<<<<<< HEAD
+=======
+					self.total_home = (self.total_pos_home * 100)/(self.total_pos_home + self.total_neg_home)
+					self.graph = self.total_home - self.total_away
+
+					i += 1
+					plt.xlabel('Tweets (As game progresses)')
+					plt.ylabel('Difference in Positive Percentage\n\nAway                                             Home')
+
+					plt.title("Notre Dame vs Georgia Tech (02-26-2017)")
+					#plt.axis([0,i,-50,50])    #For more detailed look
+					plt.scatter(i,self.graph)
+					plt.pause(.001)
+>>>>>>> 90b164745f1408bfd301efc5ab6b088a36bba45d
 				
 				elif self.tweetTeams[tweet] == "away":
 					self.away_score = self.away_score - 1
 					print "away score: ", self.away_score
 					self.total_neg_away +=1
+<<<<<<< HEAD
 
+=======
+					self.total_away = (self.total_pos_away * 100)/(self.total_pos_away + self.total_neg_away)
+					self.graph = self.total_home - self.total_away
+					i += 1
+
+					plt.scatter(i,self.graph)
+					plt.plot(i, self.graph)
+					
+					plt.pause(.001)
+						
+>>>>>>> 90b164745f1408bfd301efc5ab6b088a36bba45d
 			elif self.jaccardMatrix[tweet][0] < self.jaccardMatrix[tweet][1]:
 				#print self.tweets[tweet]['text'].encode('ascii', 'ignore'), " is positive"
 				if self.tweetTeams[tweet] == "home":
 					self.home_score = self.home_score + 1
 					print "home score: ", self.home_score
 					self.total_pos_home += 1
+<<<<<<< HEAD
+=======
+					self.total_home = (self.total_pos_home * 100)/(self.total_pos_home + self.total_neg_home)
+					self.graph = self.total_home - self.total_away
+
+					i += 1
+					
+					plt.scatter(i,self.graph)
+					plt.plot(i,self.graph)
+					plt.pause(.001)
+				
+>>>>>>> 90b164745f1408bfd301efc5ab6b088a36bba45d
 				elif self.tweetTeams[tweet] == "away":
 					self.away_score = self.away_score + 1
 					print "away score: ", self.away_score
 					self.total_pos_away += 1
+<<<<<<< HEAD
 
+=======
+					self.total_away = (self.total_pos_away * 100)/(self.total_pos_away + self.total_neg_away)
+					self.graph = self.total_home - self.total_away
+
+					i += 1
+					plt.scatter(i,self.graph)
+					plt.plot(i,self.graph)
+					plt.pause(.001)
+>>>>>>> 90b164745f1408bfd301efc5ab6b088a36bba45d
 	def decideWinner(self):
 		
 		self.total_home = (self.total_pos_home * 100)/(self.total_pos_home + self.total_neg_home)
@@ -193,3 +260,7 @@ if __name__ == '__main__':
 	#jaccard.printMatrix()
 	jaccard.decideSentiment()
 	jaccard.decideWinner()
+<<<<<<< HEAD
+=======
+	plt.show()
+>>>>>>> 90b164745f1408bfd301efc5ab6b088a36bba45d

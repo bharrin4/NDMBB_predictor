@@ -1,142 +1,51 @@
-import tweepy
-from tweepy import StreamListener
-import json, time, sys, re, string, copy
-from nltk.corpus import stopwords
+import tweepy, time, sys
+from SportsListener import SportsListener
+import json
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
-from tweepy.api import API
-import matplotlib.pyplot as plt
-import matplotlib.cm as cm
+
+auth = tweepy.OAuthHandler('CdmceagVFZra8OR58OyP9FglK', 'qNg9qyQpM2SbQglmxg0Rvfrwozh9r4S82zYDwV4fS2ur7tAVWd')
+auth.set_access_token('612123054-irckztQDF42DdcCBHkmcnFa8ADc7QrL21wsb7xRY', 'QKRa2AAX2CrUF0VxmE9ypeoQEYI9IfZgAHzS6YHGlnUS3')
+
+api = tweepy.API(auth)
 
 
-regex = re.compile('[%s]' % re.escape(string.punctuation))
-cachedStopWords = stopwords.words('english')
+def main():
 
-class SListener(StreamListener):
+	if len(sys.argv) != 3:
+		print "incorrect number of arguments"
+		exit(-1)
 
-	def __init__(self, home_words, away_words, api = None):
-		self.api = api or API()
-		self.analyzer = SentimentIntensityAnalyzer()
-		self.counter = 0
-		self.max = 1000000000
-		self.home_words = set(home_words.values())
-		self.away_words = set(away_words.values())
-		self.tweetTeams={}
-
-		self.total_neg_home = 0
-		self.total_pos_home = 0
-		self.total_neg_away = 0
-		self.total_pos_away = 0
-		
-		self.home_score = 0
-		self.away_score = 0
-
-		self.i = 0
-		self.graph = 0
-		plt.ion()
-		
-	def on_status(self, status):
+	#read teets from positive and negative files
+	home_words = {}
+	i = 0
+	with open(sys.argv[1], 'r') as file:
+		for line in file:
+			home_words[i] = line.rstrip('\n')
+			i=i+1
+	away_words = {}
+	i = 0
+	with open(sys.argv[2], 'r') as file:
+		for line in file:
+			away_words[i] = line.rstrip('\n')
+			i=i+1
+	 
 	
-		tweet = status.text.encode('utf8')
-		vs = self.analyzer.polarity_scores(tweet)
-		print("{:-<65} {}".format(tweet, str(vs)))
-		sent = vs['compound']		
-
-		team = self.classifyTweet(tweet)
-
-		#update scores
-		if team=="home":
-			if sent > 0:
-				self.total_pos_home += sent
-				#print "positive home ",self.total_pos_home
-			elif sent < 0:
-				self.total_neg_home -= sent
-				#print "negative home ", self.total_neg_home
-		elif team=="away":
-			if sent > 0:
-				self.total_pos_away += sent
-				#print "positive away ", self.total_pos_away
-			elif sent < 0:
-				self.total_neg_away -= sent
-				#print "negative away ", self.total_neg_away
-
-		self.decideWinner()
-
-		self.counter += 1
-		if self.counter < self.max: return True
-		else:
-			return False
-
-	def on_error(self, status_code):
-		sys.stderr.write('Error: ' + str(status_code) + "\n")
-		time.sleep(60)
-		return
-
-	def wordSet(self, string):
-		words = string.lower().strip().split(' ')
-		for word in words:
-			word = word.rstrip().lstrip()
-			if not re.match(r'^https?;\/\/.*[\r\n]*', word) \
-			and not re.match('^@.*', word) \
-			and not re.match('\s', word) \
-			and word not in cachedStopWords \
-			and word != 'rt' \
-			and word != ' ':
-				yield regex.sub(' ', word)
-
-	def jaccardDist(self, A, B):
-		jaccDist = 1 - float(len(A.intersection(B))) / float(len(A.union(B)))
-                return jaccDist
-
-	def classifyTweet(self,tweet):
-		tweet_words = set(self.wordSet(tweet))
+	track = home_words.values() + away_words.values()
 
 
-		#grab words from home and away lists
-		distHome = self.jaccardDist(tweet_words, self.home_words)
-		distAway = self.jaccardDist(tweet_words, self.away_words)
+	listen = SportsListener(home_words, away_words, api)
+	stream = tweepy.Stream(auth, listen)
 
-		if distHome < distAway:
-			self.tweetTeams[tweet] = "home"
-			return self.tweetTeams[tweet]
-		elif distHome > distAway:
-			self.tweetTeams[tweet] = "away"
-			return self.tweetTeams[tweet]
+	print "Streaming started..."
 
-	def decideWinner(self):
-		total_home = self.total_pos_home + self.total_neg_home
-		total_away = self.total_pos_away + self.total_neg_away
+	try:
+		stream.filter(track = track)
+	except:
+		print "error!"
+		stream.disconnect()
 
-		if total_home != 0:
-#			print "self.total_pos_home ", self.total_pos_home
-			self.total_home = (float(self.total_pos_home)/float(total_home)) * 100
-		else:
-			self.total_home = 0
-
-		if total_away != 0:
-#			print "self.total_pos_away ", self.total_pos_away
-			self.total_away = (self.total_pos_away/total_away) * 100
-		else:
-			self.total_away = 0
-		
-		self.graph = self.total_home - self.total_away
-		self.i += 1
-
-		plt.xlabel('Tweets (As game progresses)')
-		plt.ylabel('Difference in Positive Percentage\n\nAway                                             Home')
-
-		plt.title("Watford vs. Liverpool (05-01-2017)")
-		
-		plt.scatter(self.i, self.graph)
-		plt.plot(self.i, self.graph)
-		plt.pause(0.05)
+if __name__ == '__main__':
+	main()
 
 
-		print "Home Positive Percentage", self.total_home
-                print "Away Positive Percentage", self.total_away
 
-                if self.total_home> self.total_away:
-                        print "HOME TEAM WINNING"
-                elif self.total_away > self.total_home:
-                        print "AWAY TEAM WINNING"
-
-		print "\n"
